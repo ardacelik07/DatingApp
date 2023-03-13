@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,16 +31,15 @@ namespace API.Controllers
           
           
           [HttpPost("register")]
-          
+                                                            
           public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto){
              
              if(await UserExists(registerDto.username)){
                          
-                      return BadRequest("username is taken");
+                      return BadRequest("username is  already taken");
              }
              using var hmac = new HMACSHA512();
-
-             var user = new AppUser
+              var user = new AppUser
              {
                 UserName = registerDto.username.ToLower(),
                 PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.password)),
@@ -48,6 +48,8 @@ namespace API.Controllers
                
                _context.Users.Add(user);
                await _context.SaveChangesAsync();
+
+               
 
                return new UserDto{
                 UserName = user.UserName,
