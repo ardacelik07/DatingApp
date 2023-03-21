@@ -9,6 +9,7 @@ using API.Data;
 using API.Dtos;
 using API.Entities;
 using API.interfaces;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -22,9 +23,11 @@ namespace API.Controllers
     {
          private readonly DataContext _context;
          private readonly ITokenService tokens;
+        public IMapper _mapper { get; }
 
-        public AccountController(DataContext context,ITokenService tokenService)
+        public AccountController(DataContext context,ITokenService tokenService, IMapper mapper) 
         {
+            _mapper = mapper;
             _context = context;
             tokens = tokenService;
         }
@@ -38,13 +41,14 @@ namespace API.Controllers
                          
                       return BadRequest("username is  already taken");
              }
+
+             var user = _mapper.Map<AppUser>(registerDto);
              using var hmac = new HMACSHA512();
-              var user = new AppUser
-             {
-                UserName = registerDto.username.ToLower(),
-                PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.password)),
-                PasswordSalt = hmac.Key
-             };
+            
+                user.UserName = registerDto.username.ToLower();
+                user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.password));
+                user.PasswordSalt = hmac.Key;
+          
                
                _context.Users.Add(user);
                await _context.SaveChangesAsync();
@@ -53,7 +57,8 @@ namespace API.Controllers
 
                return new UserDto{
                 UserName = user.UserName,
-                Token = tokens.CreateToken(user)
+                Token = tokens.CreateToken(user),
+                KnownAs = user.KnownAs
                };
           }
                                                    
@@ -78,7 +83,9 @@ namespace API.Controllers
                          return new UserDto{
                 UserName = user.UserName,
                 Token = tokens.CreateToken(user),
-                photoUrl = user.Photos.FirstOrDefault(x=>x.IsMain)?.Url
+                photoUrl = user.Photos.FirstOrDefault(x=>x.IsMain)?.Url,
+                KnownAs=user.KnownAs
+
                 };
         }
          
