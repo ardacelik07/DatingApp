@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using API.Entities;
+using API.Helpers;
 using API.interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,11 +17,26 @@ namespace API.Data
             _context = context;
         }
 
-        public async Task<IEnumerable<AppUser>> GetUserAsync()
+        public async Task<PagedList<AppUser>> GetUserAsync(UserParams userParams)
         {
-            return await _context.Users
-            .Include(p => p.Photos)
-            .ToListAsync();
+          var query = _context.Users.AsQueryable();
+          query = query.Where(u => u.UserName != userParams.CurrentUsername);
+          query = query.Where(u => u.Gender == userParams.Gender);
+
+          var minDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MaxAge -1));
+          var maxDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-userParams.MinAge));
+
+          query = query.Where(u => u.DateOfBirth >= minDob && u.DateOfBirth <= maxDob);
+
+          query = userParams.OrderBy switch 
+          {
+            "created" => query.OrderByDescending(u => u.Created),
+            _=> query.OrderByDescending(u => u.LastActive)
+          };
+            
+
+            return await PagedList<AppUser>.CreateAsync(query.Include(p=>p.Photos).AsNoTracking(),userParams.PageNumber,userParams.PageSize);
+        
         }
 
         public async Task<AppUser> GetUserByIdAsync(int id)

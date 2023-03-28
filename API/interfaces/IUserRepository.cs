@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using API.Entities;
+using API.Helpers;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace API.interfaces
@@ -13,7 +14,7 @@ namespace API.interfaces
         
         Task<bool> SaveAllAsync();
 
-        Task<IEnumerable<AppUser>> GetUserAsync();
+        Task<PagedList<AppUser>> GetUserAsync(UserParams userParams);
 
         Task<AppUser> GetUserByIdAsync(int id);
 

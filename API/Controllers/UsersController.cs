@@ -1,25 +1,23 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using API.Data;
 using API.Dtos;
 using API.Entities;
+using API.Extensions;
+using API.Helpers;
 using API.interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
-   [Authorize]
+    
+    [Authorize]
     public class UsersController : BaseApiController
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         public IPhotoService _PhotoService { get; }
+
 
         public UsersController(IUserRepository userRepository,IMapper mapper,IPhotoService photoService)
         {
@@ -31,12 +29,26 @@ namespace API.Controllers
         
         
         [HttpGet]
-        public  async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers(){
+        public  async Task<ActionResult<PagedList<MemberDto>>> GetUsers([FromQuery]UserParams userParams){
+                  
 
-          var users =  await _userRepository.GetUserAsync();  
-       
+              var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var currentuser = await _userRepository.GetUserByUsernameAsync(username);
+
+            userParams.CurrentUsername = currentuser.UserName;
+
+              if(string.IsNullOrEmpty(userParams.Gender)){
+                userParams.Gender = currentuser.Gender ==  "male" ? "female":"male";
+              }
+
+          var users =  await _userRepository.GetUserAsync(userParams);  
+                 
+               
         var usersToReturn = _mapper.Map<IEnumerable<MemberDto>>(users);
-
+        
+         Response.AddPaginationHeader(new PaginationHeader(users.CurrentPage,users.PageSize,users.TotalCount,users.TotalPages));
+         
         return Ok(usersToReturn);
             
         }

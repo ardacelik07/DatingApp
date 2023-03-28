@@ -45,7 +45,7 @@ export class MemberEditComponent implements OnInit {
         this.toastr.success('profile updated succesfully');
         this.editForm?.reset(this.member)
       }
-
+        
       })
     }
    

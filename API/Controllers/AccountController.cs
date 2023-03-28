@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using API.Data;
 using API.Dtos;
 using API.Entities;
+using API.Helpers;
 using API.interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ using SQLitePCL;
 
 namespace API.Controllers
 {
+  
     public class AccountController:BaseApiController
     {
          private readonly DataContext _context;
@@ -41,6 +43,7 @@ namespace API.Controllers
                          
                       return BadRequest("username is  already taken");
              }
+             
 
              var user = _mapper.Map<AppUser>(registerDto);
              using var hmac = new HMACSHA512();
@@ -58,7 +61,9 @@ namespace API.Controllers
                return new UserDto{
                 UserName = user.UserName,
                 Token = tokens.CreateToken(user),
-                KnownAs = user.KnownAs
+                KnownAs = user.KnownAs,
+                Gender = user.Gender,
+               
                };
           }
                                                    
@@ -84,7 +89,8 @@ namespace API.Controllers
                 UserName = user.UserName,
                 Token = tokens.CreateToken(user),
                 photoUrl = user.Photos.FirstOrDefault(x=>x.IsMain)?.Url,
-                KnownAs=user.KnownAs
+                KnownAs=user.KnownAs,
+                Gender = user.Gender
 
                 };
         }
