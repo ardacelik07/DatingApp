@@ -32,7 +32,7 @@ namespace API.Controllers
         public  async Task<ActionResult<PagedList<MemberDto>>> GetUsers([FromQuery]UserParams userParams){
                   
 
-              var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+              var username = User.FindFirst(ClaimTypes.Name)?.Value;
 
             var currentuser = await _userRepository.GetUserByUsernameAsync(username);
 
