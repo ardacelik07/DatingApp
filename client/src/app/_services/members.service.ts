@@ -7,6 +7,7 @@ import { PaginatedResult } from '../_models/pagination';
 import { User } from '../_models/user';
 import { UserParams } from '../_models/userParams';
 import { AccountService } from './account.service';
+import { GetPaginationHeaders, getPaginatedResult } from './paginationHelper';
 
 @Injectable({
   providedIn: 'root'
@@ -48,7 +49,7 @@ userParams: UserParams | undefined;
 
     const response = this.memberCache.get(Object.values(UserParams).join('-'));
     if(response) return of(response);
-    let params = this.GetPaginationHeaders(UserParams.pageNumber,UserParams.pageSize);
+    let params = GetPaginationHeaders(UserParams.pageNumber,UserParams.pageSize);
 
     params = params.append('minAge',UserParams.minAge);
     params = params.append('maxAge',UserParams.maxAge);
@@ -56,7 +57,7 @@ userParams: UserParams | undefined;
     params = params.append('OrderBy',UserParams.orderBy);
 
   
-    return this.getPaginatedResult<Member[]>(this.baseUrl + 'users',params).pipe(
+    return getPaginatedResult<Member[]>(this.baseUrl + 'users',params,this.http).pipe(
       map(response => {
         this.memberCache.set(Object.values(UserParams).join('-'),response);
         return response;
@@ -64,31 +65,7 @@ userParams: UserParams | undefined;
     )
   }
 
-  private getPaginatedResult<T>(url:string,params: HttpParams) {
-    const paginatedResult : PaginatedResult<T> = new PaginatedResult<T>;
-    return this.http.get<T>(url , { observe: 'response', params }).pipe(
-      map(response => {
-        if (response.body) {
-         paginatedResult.result = response.body;
-
-        }
-        const pagination = response.headers.get('pagination');
-        if (pagination) {
-     paginatedResult.pagination = JSON.parse(pagination);
-        }
-        return paginatedResult;
-      })
-    );
-  }
-
-  private GetPaginationHeaders(pageNumber:number,pageSize: number) {
-    let params = new HttpParams();
-
-      params = params.append('pageNumber', pageNumber);
-      params = params.append('pageSize', pageSize);
-
-    return params;
-  }
+ 
 
      getMember(username: string){
       const member = [...this.memberCache.values()]
@@ -118,10 +95,10 @@ userParams: UserParams | undefined;
     }
 
        getLikes(predicate:string,pageNumber:number,pageSize: number){
-        let params = this.GetPaginationHeaders(pageNumber,pageSize);
+        let params = GetPaginationHeaders(pageNumber,pageSize);
         params = params.append('predicate',predicate);
         
-        return this.getPaginatedResult<Member[]>(this.baseUrl + 'likes',params);
+        return getPaginatedResult<Member[]>(this.baseUrl + 'likes',params,this.http);
        }
  
 }

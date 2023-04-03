@@ -9,6 +9,7 @@ using API.Helpers;
 using API.interfaces;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Mvc;
+using SQLitePCL;
 
 namespace API.Controllers
 {
@@ -26,7 +27,7 @@ namespace API.Controllers
         [HttpPost("{username}")]
         public async Task<ActionResult> AddLike(string username)
         {
-             var sourceUserId =int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+              var sourceUserId =int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
              var likedUser = await _userRepository.GetUserByUsernameAsync(username);
              var sourceUser= await _likesRepository.GetUserWithLikes(sourceUserId);
 
